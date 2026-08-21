@@ -1,0 +1,1051 @@
+<title>Mem0 v3 Data Paths</title>
+<style>
+  :root {
+    --paper:      #F6F7F4;
+    --surface:    #FFFFFF;
+    --surface-2:  #EFF1ED;
+    --ink:        #1A2024;
+    --ink-2:      #3D474C;
+    --muted:      #6B767B;
+    --rule:       #D6DCD7;
+    --rule-firm:  #B4BEB6;
+
+    /* Signal hues — these encode the three retrieval signals and nothing else. */
+    --sig-sem:    #2E5AAC;
+    --sig-bm:     #A0522B;
+    --sig-ent:    #47693B;
+    --gone:       #9A4433;
+
+    --sem-wash:   #2E5AAC14;
+    --bm-wash:    #A0522B14;
+    --ent-wash:   #47693B14;
+    --gone-wash:  #9A443314;
+
+    --display: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #14191B;
+      --surface:    #1B2124;
+      --surface-2:  #232A2D;
+      --ink:        #E7EDE9;
+      --ink-2:      #C2CCC7;
+      --muted:      #8E9A9C;
+      --rule:       #2E3639;
+      --rule-firm:  #45504F;
+
+      --sig-sem:    #7EA5E8;
+      --sig-bm:     #D99A6C;
+      --sig-ent:    #93BC7E;
+      --gone:       #D98A76;
+
+      --sem-wash:   #7EA5E81F;
+      --bm-wash:    #D99A6C1F;
+      --ent-wash:   #93BC7E1F;
+      --gone-wash:  #D98A761F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #14191B;
+    --surface:    #1B2124;
+    --surface-2:  #232A2D;
+    --ink:        #E7EDE9;
+    --ink-2:      #C2CCC7;
+    --muted:      #8E9A9C;
+    --rule:       #2E3639;
+    --rule-firm:  #45504F;
+
+    --sig-sem:    #7EA5E8;
+    --sig-bm:     #D99A6C;
+    --sig-ent:    #93BC7E;
+    --gone:       #D98A76;
+
+    --sem-wash:   #7EA5E81F;
+    --bm-wash:    #D99A6C1F;
+    --ent-wash:   #93BC7E1F;
+    --gone-wash:  #D98A761F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 28px 120px; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 22px; margin-bottom: 46px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(34px, 5.4vw, 52px);
+    line-height: 1.06;
+    letter-spacing: -0.018em;
+    font-weight: 400;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+
+  .standfirst { font-size: 18px; line-height: 1.55; color: var(--ink-2); max-width: 64ch; margin: 0; }
+
+  /* ---------- sections ---------- */
+
+  section { margin-bottom: 62px; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule-firm);
+    padding-bottom: 9px;
+    margin-bottom: 24px;
+  }
+
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    flex: none;
+    padding-top: 4px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(23px, 3vw, 30px);
+    line-height: 1.18;
+    letter-spacing: -0.012em;
+    font-weight: 400;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 34px 0 12px;
+  }
+
+  p { max-width: 74ch; margin: 0 0 15px; }
+
+  a { color: var(--sig-sem); text-decoration: none; border-bottom: 1px solid var(--sem-wash); }
+  a:hover { border-bottom-color: currentColor; }
+  a:focus-visible { outline: 2px solid var(--sig-sem); outline-offset: 3px; border-radius: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.865em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.1em 0.34em;
+    white-space: nowrap;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.75;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 2.5px solid var(--sig-sem);
+    border-radius: 3px;
+    padding: 16px 18px;
+    margin: 0 0 22px;
+    overflow-x: auto;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; white-space: pre; }
+  pre .cm { color: var(--muted); }
+
+  strong { font-weight: 650; }
+
+  ul { margin: 0 0 15px; padding-left: 20px; max-width: 74ch; }
+  li { margin-bottom: 7px; }
+
+  /* ---------- figures ---------- */
+
+  figure { margin: 26px 0 30px; padding: 0; }
+
+  .canvas {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 18px;
+  }
+
+  figure svg { display: block; width: 100%; min-width: 680px; height: auto; color: var(--ink); }
+
+  figcaption {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin-top: 11px;
+    max-width: 84ch;
+  }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  /* svg primitives */
+  .box { fill: var(--surface); stroke: var(--rule-firm); stroke-width: 1.2; }
+  .box-2 { fill: var(--surface-2); stroke: var(--rule-firm); stroke-width: 1.2; }
+  .flow { fill: none; stroke: currentColor; stroke-width: 1.3; }
+  .t { font-family: var(--body); font-size: 13px; fill: var(--ink); }
+  .t-m { font-family: var(--mono); font-size: 12.5px; fill: var(--ink); }
+  .t-lbl { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+  .t-sub { font-family: var(--body); font-size: 12px; fill: var(--muted); }
+  .t-hd { font-family: var(--mono); font-size: 11px; letter-spacing: 0.11em; fill: var(--muted); }
+  .b { font-weight: 650; }
+
+  /* ---------- tables ---------- */
+
+  .tbl-scroll { overflow-x: auto; margin: 18px 0 24px; }
+
+  table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td { text-align: left; vertical-align: top; padding: 10px 13px; border-bottom: 1px solid var(--rule); }
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule-firm);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .blocks td:first-child { white-space: nowrap; }
+  .blocks .bname { font-weight: 650; display: block; }
+  .blocks .bloc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+  .blocks .watch { color: var(--gone); font-weight: 600; }
+
+  /* ---------- callout ---------- */
+
+  .note {
+    border-left: 2.5px solid var(--rule-firm);
+    background: var(--surface);
+    padding: 15px 18px;
+    margin: 22px 0;
+    font-size: 15px;
+  }
+  .note.warn { border-left-color: var(--gone); background: var(--gone-wash); }
+  .note p { margin-bottom: 0; max-width: 80ch; }
+  .note p + p { margin-top: 10px; }
+  .note-tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .note.warn .note-tag { color: var(--gone); }
+
+  /* ---------- signal key ---------- */
+
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 26px;
+    padding: 0;
+    margin: 0 0 22px;
+    list-style: none;
+    max-width: none;
+  }
+  .key li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .swatch { width: 22px; height: 3px; border-radius: 2px; flex: none; }
+  .sw-sem { background: var(--sig-sem); }
+  .sw-bm  { background: var(--sig-bm); }
+  .sw-ent { background: var(--sig-ent); }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 20px; font-size: 13.5px; color: var(--muted); }
+  footer p { max-width: 80ch; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Mem0 OSS · v3 pipeline · commit a488e190</p>
+    <h1>Two paths, three stores, one scope key</h1>
+    <p class="standfirst">Everything in Mem0 v3 is either the <strong>ADD path</strong> writing memories down or
+      the <strong>SEARCH path</strong> reading them back. <code>filters</code> decides whose memories either
+      path may touch. Every block below is annotated with what it does and where it lives.</p>
+  </header>
+
+  <!-- ============ 0. LIFECYCLE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>Where the two calls actually sit</h2>
+    </div>
+
+    <p>Mem0 has no session concept, no login hook and no background worker. It is called at exactly two points
+      per turn and is dormant everywhere else. Nothing is created when a user arrives — a partition begins to
+      exist the first time a row is written into it.</p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 960 630" role="img" aria-label="Lifecycle swimlane. Your application boots mem0 once, then for each turn calls search before invoking your own model and add afterwards. Login, model invocation and conversation end involve no mem0 call at all.">
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <text class="t-hd" x="44" y="24">YOUR APPLICATION</text>
+          <text class="t-hd" x="560" y="24">MEM0</text>
+          <path class="flow" d="M 500 36 L 500 612" stroke-dasharray="3 4" stroke-width="1"></path>
+
+          <!-- 1 boot -->
+          <rect class="box" x="44" y="48" width="416" height="44" rx="3"></rect>
+          <text class="t-m" x="60" y="68">Memory.from_config({…})</text>
+          <text class="t-sub" x="60" y="85">once at boot — one instance shared by every user</text>
+          <path class="flow" d="M 460 70 L 496 70" marker-end="url(#a1)"></path>
+          <text class="t" x="560" y="66">instantiates the stores</text>
+          <text class="t-sub" x="560" y="84">no rows written yet</text>
+
+          <!-- 2 login -->
+          <rect class="box" x="44" y="118" width="416" height="44" rx="3"></rect>
+          <text class="t-m" x="60" y="138">uid = auth.session.user_id</text>
+          <text class="t-sub" x="60" y="155">your identifier — mem0 never mints one</text>
+          <text class="t-lbl" x="560" y="144">— not called —</text>
+
+          <!-- turn group -->
+          <rect x="16" y="190" width="928" height="276" rx="4" fill="none" stroke="var(--rule-firm)" stroke-dasharray="5 4"></rect>
+          <text class="t-hd" x="30" y="210">EACH TURN — REPEAT N TIMES</text>
+
+          <!-- 3a search -->
+          <rect class="box" x="44" y="222" width="416" height="44" rx="3" stroke="var(--sig-sem)" stroke-width="1.6"></rect>
+          <text class="t-m" x="60" y="242">mem.search(msg, filters={"user_id": uid})</text>
+          <text class="t-sub" x="60" y="259">fetch what we already know</text>
+          <path class="flow" d="M 460 244 L 496 244" stroke="var(--sig-sem)" color="var(--sig-sem)" marker-end="url(#a1)"></path>
+          <text class="t" x="560" y="240" fill="var(--sig-sem)">reads Memory + Entity store</text>
+          <text class="t-sub" x="560" y="258">0 LLM calls · writes nothing</text>
+
+          <!-- 3b your model -->
+          <rect class="box" x="44" y="292" width="416" height="44" rx="3"></rect>
+          <text class="t-m" x="60" y="312">reply = my_llm(context + msg)</text>
+          <text class="t-sub" x="60" y="329">your model, your prompt, your judgement</text>
+          <text class="t-lbl" x="560" y="318">— not called —</text>
+
+          <!-- 3c add -->
+          <rect class="box" x="44" y="362" width="416" height="44" rx="3" stroke="var(--sig-ent)" stroke-width="1.6"></rect>
+          <text class="t-m" x="60" y="382">mem.add([user, assistant], user_id=uid)</text>
+          <text class="t-sub" x="60" y="399">hand the turn back for extraction</text>
+          <path class="flow" d="M 460 384 L 496 384" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#a1)"></path>
+          <text class="t" x="560" y="380" fill="var(--sig-ent)">writes all three stores</text>
+          <text class="t-sub" x="560" y="398">1 LLM call · append only</text>
+
+          <!-- 4 end -->
+          <rect class="box" x="44" y="494" width="416" height="44" rx="3"></rect>
+          <text class="t-m" x="60" y="514">conversation ends</text>
+          <text class="t-sub" x="60" y="531">no close(), no flush, no session teardown</text>
+          <text class="t-lbl" x="560" y="520">— not called —</text>
+
+          <!-- 5 return -->
+          <rect class="box" x="44" y="558" width="416" height="44" rx="3"></rect>
+          <text class="t-m" x="60" y="578">next week — mem.search(…, same uid)</text>
+          <text class="t-sub" x="60" y="595">new conversation, same identifier</text>
+          <path class="flow" d="M 460 580 L 496 580" marker-end="url(#a1)"></path>
+          <text class="t" x="560" y="576">same partition</text>
+          <text class="t-sub" x="560" y="594">last week's memories come back</text>
+        </svg>
+      </div>
+      <figcaption>The boundary is crossed twice per turn and never in between. Login, model invocation and
+        conversation teardown involve <b>no mem0 call at all</b> — which is why there is nothing to
+        "initialise" for a new user.</figcaption>
+    </figure>
+
+    <pre><code>mem = Memory.from_config({...})          <span class="cm"># once at boot, shared</span>
+
+<span class="cm"># ---- per turn ----</span>
+hits  = mem.search(user_msg, filters={"user_id": uid})
+ctx   = "\n".join(f"- {h['memory']}" for h in hits["results"])
+reply = my_llm(f"What we know:\n{ctx}\n\nUser: {user_msg}")
+
+mem.add([{"role": "user",      "content": user_msg},
+         {"role": "assistant", "content": reply}], user_id=uid)</code></pre>
+
+    <h3>The identity keys and their natural lifetimes</h3>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Key</th><th>Comes from</th><th>Changes when</th></tr></thead>
+        <tbody>
+          <tr><td><code>user_id</code></td><td>your auth or user table</td><td>never, for a given person</td></tr>
+          <tr><td><code>agent_id</code></td><td>your configuration</td><td>never, per bot</td></tr>
+          <tr><td><code>run_id</code></td><td><strong>you mint it</strong> — uuid, ticket id, thread id</td><td>each new conversation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Note the call shape differs: the parameter literally named <code>filters</code> exists only on
+      <code>search()</code> and <code>get_all()</code>. <code>add()</code> takes the same identifiers as
+      top-level keyword arguments. Both converge on one internal filter dict.</p>
+
+    <p><strong>Do not put <code>run_id</code> in a search filter.</strong> It would restrict results to the
+      current thread, which defeats long-term memory. Scope reads by <code>user_id</code> alone.</p>
+
+    <h3>The <code>run_id</code> trade-off on writes</h3>
+
+    <p>At <code>main.py:924</code> the internal filter used by ADD is built from all three identity keys, and
+      that dict drives both the P1 dedup lookup and the P7 entity lookup. Passing <code>run_id</code> therefore
+      narrows far more than it appears to.</p>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Effect</th><th><code>run_id</code> passed to add()</th><th><code>run_id</code> omitted</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Message log bucket<br><span class="bloc">P0 / P8</span></td>
+            <td>Per conversation — clean context</td>
+            <td>Shared across threads; yesterday's messages can leak into today's extraction</td>
+          </tr>
+          <tr>
+            <td>Dedup lookup<br><span class="bloc">P1</span></td>
+            <td>Only sees this thread — cross-conversation duplicates slip through</td>
+            <td>Sees everything</td>
+          </tr>
+          <tr>
+            <td>Entity index<br><span class="bloc">P7</span></td>
+            <td>A separate node per conversation — one entity duplicated N times</td>
+            <td>One node, links accumulate</td>
+          </tr>
+          <tr>
+            <td>Search results</td>
+            <td colspan="2">Unaffected either way, as long as reads filter on <code>user_id</code> only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">Recommendation</span>
+      <p>Omit <code>run_id</code> unless you need per-conversation deletion or audit. A fragmented entity index
+        directly weakens the boost signal and duplicates accumulate — both cost more than a slightly stale
+        ten-message buffer.</p>
+      <p>If you do need thread identity, put it in <code>metadata</code> instead:
+        <code>add(msgs, user_id=uid, metadata={"thread": run_id})</code>. You keep the ability to filter on it
+        without fragmenting dedup or entities, because metadata keys are not part of the identity scope.</p>
+    </div>
+  </section>
+
+  <!-- ============ 1. FILTERS ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>What <code>filters</code> actually is</h2>
+    </div>
+
+    <p><code>filters</code> is not a scoring input. It is a <code>WHERE</code> clause: it decides which rows are
+      <em>eligible</em>, never which row ranks first. It is passed down into every store query, so exclusion
+      happens inside the database rather than in Python.</p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 880 356" role="img" aria-label="Anatomy of the filters dict: user_id, agent_id and run_id form the required identity scope; actor_id narrows a query to one speaker; any other key is an optional metadata predicate supporting comparison operators and boolean nesting.">
+          <defs>
+            <marker id="tick" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <text class="t-hd" x="20" y="18">THE DICT YOU PASS</text>
+          <rect class="box" x="20" y="30" width="430" height="302" rx="4"></rect>
+
+          <text class="t-m" x="38" y="58">filters = {</text>
+
+          <rect x="38" y="70" width="394" height="76" fill="var(--sem-wash)" rx="3"></rect>
+          <text class="t-m" x="54" y="90">"user_id":  "alice",</text>
+          <text class="t-m" x="54" y="112">"agent_id": "support-bot",</text>
+          <text class="t-m" x="54" y="134">"run_id":   "session-42",</text>
+
+          <text class="t-m" x="54" y="176">"actor_id": "alice",</text>
+
+          <rect x="38" y="196" width="394" height="98" fill="var(--ent-wash)" rx="3"></rect>
+          <text class="t-m" x="54" y="216">"topic":    {"in": ["billing"]},</text>
+          <text class="t-m" x="54" y="238">"priority": {"gte": 3},</text>
+          <text class="t-m" x="54" y="260">"tier":     {"ne": "free"},</text>
+          <text class="t-m" x="54" y="282">"OR":       [ {...}, {...} ],</text>
+
+          <text class="t-m" x="38" y="318">}</text>
+
+          <path class="flow" d="M 462 74 L 474 74 L 474 142 L 462 142" stroke="var(--sig-sem)"></path>
+          <path class="flow" d="M 474 108 L 500 108" stroke="var(--sig-sem)" color="var(--sig-sem)" marker-end="url(#tick)"></path>
+          <text class="t b" x="510" y="102" fill="var(--sig-sem)">Identity scope — required</text>
+          <text class="t-sub" x="510" y="122">At least one of the three, or the call</text>
+          <text class="t-sub" x="510" y="140">raises. This is the partition.</text>
+
+          <path class="flow" d="M 462 172 L 500 172" marker-end="url(#tick)"></path>
+          <text class="t b" x="510" y="166">Actor narrowing — query only</text>
+          <text class="t-sub" x="510" y="186">Restricts results to one speaker in</text>
+          <text class="t-sub" x="510" y="204">a multi-participant transcript.</text>
+
+          <path class="flow" d="M 462 200 L 474 200 L 474 290 L 462 290" stroke="var(--sig-ent)"></path>
+          <path class="flow" d="M 474 245 L 500 245" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#tick)"></path>
+          <text class="t b" x="510" y="239" fill="var(--sig-ent)">Metadata predicates — optional</text>
+          <text class="t-sub" x="510" y="259">Any other key. Operators eq ne in nin</text>
+          <text class="t-sub" x="510" y="277">gt gte lt lte contains icontains "*",</text>
+          <text class="t-sub" x="510" y="295">plus AND / OR / NOT nesting.</text>
+        </svg>
+      </div>
+      <figcaption>One dict, two roles: a <b>required partition key</b> and an <b>optional predicate set</b>.
+        Built by <code>_build_filters_and_metadata()</code> at <code>main.py:314</code>, which returns two
+        dicts — one stamped onto writes, one attached to reads.</figcaption>
+    </figure>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Method</th><th>Identity goes</th><th>Shape</th></tr></thead>
+        <tbody>
+          <tr><td><code>add()</code></td><td>Top-level kwargs</td><td><code>add(msgs, user_id="alice")</code></td></tr>
+          <tr><td><code>delete_all()</code></td><td>Top-level kwargs</td><td><code>delete_all(user_id="alice")</code></td></tr>
+          <tr><td><code>search()</code></td><td>Inside <code>filters</code></td><td><code>search(q, filters={"user_id": "alice"})</code></td></tr>
+          <tr><td><code>get_all()</code></td><td>Inside <code>filters</code></td><td><code>get_all(filters={"user_id": "alice"})</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">Guard worth knowing</span>
+      <p>Identity keys inside <code>metadata</code> are stripped before the write template is built
+        (<code>_strip_identity_keys()</code>, <code>main.py:143</code>). A stray
+        <code>metadata={"user_id": "bob"}</code> loses that key rather than writing into Bob's partition.</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. ARCHITECTURE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>The two paths over three stores</h2>
+    </div>
+
+    <p>State lives in exactly three places. The <strong>absent arrow matters</strong>: SEARCH never reads the
+      message log, because raw conversation is an extraction input, not a retrieval target.</p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 1000 430" role="img" aria-label="Architecture: the ADD path reads and writes all three stores — memory store, entity store and message log. The SEARCH path reads only the memory store, for the semantic and BM25 signals, and the entity store, for the entity boost. It never reads the message log.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <rect class="box-2" x="20" y="130" width="180" height="160" rx="4"></rect>
+          <text class="t-hd" x="38" y="158">ADD PATH</text>
+          <text class="t-m b" x="38" y="186">add(messages,</text>
+          <text class="t-m b" x="38" y="206">    user_id=…)</text>
+          <text class="t-sub" x="38" y="238">1 LLM call</text>
+          <text class="t-sub" x="38" y="258">append only</text>
+
+          <rect class="box" x="390" y="50" width="220" height="80" rx="4"></rect>
+          <text class="t-m b" x="408" y="80">Memory store</text>
+          <text class="t-sub" x="408" y="102">vector collection,</text>
+          <text class="t-sub" x="408" y="120">one row per memory</text>
+
+          <rect class="box" x="390" y="170" width="220" height="80" rx="4"></rect>
+          <text class="t-m b" x="408" y="200">Entity store</text>
+          <text class="t-sub" x="408" y="222">separate collection,</text>
+          <text class="t-sub" x="408" y="240">entity → memory ids</text>
+
+          <rect class="box" x="390" y="290" width="220" height="80" rx="4"></rect>
+          <text class="t-m b" x="408" y="320">Message log</text>
+          <text class="t-sub" x="408" y="342">SQLite, 10 newest</text>
+          <text class="t-sub" x="408" y="360">msgs per scope</text>
+
+          <rect class="box-2" x="800" y="130" width="180" height="160" rx="4"></rect>
+          <text class="t-hd" x="818" y="158">SEARCH PATH</text>
+          <text class="t-m b" x="818" y="186">search(query,</text>
+          <text class="t-m b" x="818" y="206">   filters={…})</text>
+          <text class="t-sub" x="818" y="238">0 LLM calls</text>
+          <text class="t-sub" x="818" y="258">read only</text>
+
+          <path class="flow" d="M 200 170 L 295 170 L 295 90 L 386 90" marker-start="url(#a2)" marker-end="url(#a2)"></path>
+          <text class="t-lbl" x="206" y="150">read  Phase 1</text>
+          <text class="t-lbl" x="206" y="164">write Phase 6</text>
+
+          <path class="flow" d="M 200 214 L 386 214" marker-start="url(#a2)" marker-end="url(#a2)"></path>
+          <text class="t-lbl" x="206" y="208">read + write Phase 7</text>
+
+          <path class="flow" d="M 200 254 L 295 254 L 295 330 L 386 330" marker-start="url(#a2)" marker-end="url(#a2)"></path>
+          <text class="t-lbl" x="206" y="234">read  Phase 0</text>
+          <text class="t-lbl" x="206" y="248">write Phase 8</text>
+
+          <path class="flow" d="M 610 90 L 705 90 L 705 180 L 796 180" stroke="var(--sig-sem)" color="var(--sig-sem)" marker-end="url(#a2)"></path>
+          <text class="t-lbl" x="616" y="82" fill="var(--sig-sem)">semantic + BM25</text>
+
+          <path class="flow" d="M 610 214 L 705 214 L 705 240 L 796 240" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#a2)"></path>
+          <text class="t-lbl" x="616" y="206" fill="var(--sig-ent)">entity boost</text>
+
+          <text class="t-lbl" x="616" y="324">not read by SEARCH</text>
+
+          <path class="flow" d="M 390 398 L 610 398" stroke-dasharray="4 4"></path>
+          <text class="t-lbl" x="390" y="418">every row keyed by the filters identity scope</text>
+        </svg>
+      </div>
+      <figcaption>ADD is the only writer, and it reads all three stores before writing any of them. SEARCH is
+        read-only and touches two of the three. Neither supporting store holds unique data — the entity store is
+        derived from memory text, the message log is a rolling ten-row buffer.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 3. ADD ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>ADD path — one LLM call, append only</h2>
+    </div>
+
+    <p>Two layers. <code>add()</code> at <code>main.py:760</code> only validates arguments and dispatches — it
+      touches no store. All nine phases live in <code>_add_to_vector_store()</code> at
+      <code>main.py:879</code>.</p>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 940 600" role="img" aria-label="The ADD path in nine phases: gather context from the message log, retrieve ten existing memories, one LLM extraction call producing ADD operations only, batch embed, MD5 hash dedup, batch insert into the memory store, entity linking into the entity store, and appending messages back to the log.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <text class="t-hd" x="20" y="18">PHASE</text>
+          <text class="t-hd" x="640" y="18">STORE TOUCHED</text>
+
+          <rect class="box" x="20" y="30" width="580" height="48" rx="3"></rect>
+          <text class="t-m b" x="38" y="52">P0</text>
+          <text class="t b" x="82" y="52">Context gathering</text>
+          <text class="t-sub" x="82" y="70">build session scope · pull 10 last messages · flatten new messages</text>
+          <path class="flow" d="M 600 54 L 632 54" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="58">read Message log</text>
+
+          <path class="flow" d="M 310 78 L 310 96" marker-end="url(#a3)"></path>
+
+          <rect class="box" x="20" y="98" width="580" height="48" rx="3"></rect>
+          <text class="t-m b" x="38" y="120">P1</text>
+          <text class="t b" x="82" y="120">Existing retrieval</text>
+          <text class="t-sub" x="82" y="138">top 10 semantic hits · UUIDs remapped to "0","1",… against hallucination</text>
+          <path class="flow" d="M 600 122 L 632 122" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="126">read Memory store</text>
+
+          <path class="flow" d="M 310 146 L 310 164" marker-end="url(#a3)"></path>
+
+          <rect x="20" y="166" width="580" height="66" rx="3" fill="var(--sem-wash)" stroke="var(--sig-sem)" stroke-width="1.6"></rect>
+          <text class="t-m b" x="38" y="190" fill="var(--sig-sem)">P2</text>
+          <text class="t b" x="82" y="190" fill="var(--sig-sem)">Extraction — the only LLM call</text>
+          <text class="t-sub" x="82" y="209">in: summary · last-k · existing memories · new messages · observation date</text>
+          <text class="t-sub" x="82" y="226">out: ADD operations only — no UPDATE, no DELETE, no NOOP</text>
+          <path class="flow" d="M 600 199 L 632 199" stroke="var(--sig-sem)" color="var(--sig-sem)" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="196" fill="var(--sig-sem)">no store —</text>
+          <text class="t-lbl" x="640" y="212" fill="var(--sig-sem)">LLM boundary</text>
+
+          <path class="flow" d="M 310 232 L 310 250" marker-end="url(#a3)"></path>
+
+          <rect class="box" x="20" y="252" width="580" height="48" rx="3"></rect>
+          <text class="t-m b" x="38" y="274">P3</text>
+          <text class="t b" x="82" y="274">Batch embed</text>
+          <text class="t-sub" x="82" y="292">one embed_batch call · falls back to per-item embed on failure</text>
+
+          <path class="flow" d="M 310 300 L 310 318" marker-end="url(#a3)"></path>
+
+          <rect class="box" x="20" y="320" width="580" height="48" rx="3"></rect>
+          <text class="t-m b" x="38" y="342">P4·5</text>
+          <text class="t b" x="96" y="342">Hash dedup + lemmatize</text>
+          <text class="t-sub" x="96" y="360">MD5 exact match, within batch and against P1 · spaCy lemmas for BM25</text>
+
+          <path class="flow" d="M 310 368 L 310 386" marker-end="url(#a3)"></path>
+
+          <rect class="box" x="20" y="388" width="580" height="48" rx="3"></rect>
+          <text class="t-m b" x="38" y="410">P6</text>
+          <text class="t b" x="82" y="410">Batch persist</text>
+          <text class="t-sub" x="82" y="428">single insert · one history row each, event always "ADD"</text>
+          <path class="flow" d="M 600 412 L 632 412" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="416">write Memory store</text>
+
+          <path class="flow" d="M 310 436 L 310 454" marker-end="url(#a3)"></path>
+
+          <rect x="20" y="456" width="580" height="66" rx="3" fill="var(--ent-wash)" stroke="var(--sig-ent)" stroke-width="1.6"></rect>
+          <text class="t-m b" x="38" y="480" fill="var(--sig-ent)">P7</text>
+          <text class="t b" x="82" y="480" fill="var(--sig-ent)">Entity linking</text>
+          <text class="t-sub" x="82" y="499">spaCy NER · global dedup · exact match, or semantic match ≥ 0.95</text>
+          <text class="t-sub" x="82" y="516">wrapped in try/except — failure only warns, memories still land</text>
+          <path class="flow" d="M 600 489 L 632 489" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="493" fill="var(--sig-ent)">write Entity store</text>
+
+          <path class="flow" d="M 310 522 L 310 540" marker-end="url(#a3)"></path>
+
+          <rect class="box" x="20" y="542" width="580" height="46" rx="3"></rect>
+          <text class="t-m b" x="38" y="565">P8</text>
+          <text class="t b" x="82" y="565">Persist messages</text>
+          <text class="t-sub" x="82" y="582">append, then evict everything past the 10 newest for this scope</text>
+          <path class="flow" d="M 600 565 L 632 565" marker-end="url(#a3)"></path>
+          <text class="t-lbl" x="640" y="569">write Message log</text>
+        </svg>
+      </div>
+      <figcaption>P2 is the only model call and the only place cost and latency concentrate. Everything after
+        it is batched CPU and I/O work, and every fallback path degrades rather than fails.</figcaption>
+    </figure>
+
+    <h3>Every block explained</h3>
+
+    <div class="tbl-scroll">
+      <table class="blocks">
+        <thead><tr><th>Block</th><th>What happens</th><th>Worth knowing</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="bname">P0 · Context</span><span class="bloc">main.py:919–921</span></td>
+            <td>Flattens the identity triple into a sorted, percent-escaped <em>session scope</em> string, then
+              pulls the 10 newest messages stored under it. New messages are flattened into one text blob.</td>
+            <td>This is what lets the extractor resolve pronouns — "I went back again" is unextractable without
+              the previous turn. <span class="watch">Retention of 10 is hardcoded</span> in
+              <code>storage.py:279</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P1 · Existing</span><span class="bloc">main.py:925–938</span></td>
+            <td>Embeds the flattened conversation and runs a plain vector search for the 10 nearest existing
+              memories. Their UUIDs are replaced with <code>"0"</code>, <code>"1"</code>, … before the LLM sees
+              them.</td>
+            <td>This is a raw <code>vector_store.search()</code>, <span class="watch">not the public
+              <code>search()</code></span> — no BM25, no entity boost, no fusion. The remap exists so the model
+              cannot invent plausible-looking UUIDs.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P2 · Extraction</span><span class="bloc">main.py:942–984</span></td>
+            <td>One call. System prompt is <code>ADDITIVE_EXTRACTION_PROMPT</code>
+              (<code>prompts.py:468–944</code>); the user side is assembled by
+              <code>generate_additive_extraction_prompt()</code> at <code>prompts.py:1016</code>.</td>
+            <td>The model emits <code>linked_memory_ids</code>, but
+              <span class="watch">the OSS writer never persists it</span> — only <code>attributed_to</code>
+              survives onto the row. Three of the seven prompt input slots are also left unwired in OSS.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P3 · Embed</span><span class="bloc">main.py:992–1003</span></td>
+            <td>All extracted texts embedded in a single <code>embed_batch</code> call.</td>
+            <td>On failure it retries item by item; texts that still fail are dropped from the batch rather than
+              aborting the whole add.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P4·5 · Dedup</span><span class="bloc">main.py:1015–1039</span></td>
+            <td>MD5 of each memory text, checked against both the current batch and the hashes of the P1
+              results. Survivors get a spaCy lemma string written to <code>text_lemmatized</code>.</td>
+            <td><span class="watch">Dedup is exact-match only.</span> Two paraphrases of the same fact both
+              land. That lemma field is what BM25 later matches against, so no spaCy means no keyword
+              signal.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P6 · Persist</span><span class="bloc">main.py:1045–1084</span></td>
+            <td>One batched insert into the memory store, plus one history row per memory.</td>
+            <td>The history <code>event</code> is <span class="watch">always <code>"ADD"</code></span> and
+              <code>old_memory</code> is always <code>None</code> — no code path writes any other event.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P7 · Entities</span><span class="bloc">main.py:1086–1190</span></td>
+            <td>spaCy NER plus rules over all new memory texts. Entities are normalized and merged globally,
+              then matched against the entity store: exact text match, or vector similarity ≥ 0.95. Hits merge
+              into <code>linked_memory_ids</code>; misses create a node.</td>
+            <td>The whole phase sits in <code>try/except</code> — <span class="watch">a failure here only logs a
+              warning</span> and the memories still persist. The entity store clones the memory store's config,
+              so it cannot use a different backend.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">P8 · Messages</span><span class="bloc">main.py:1193</span></td>
+            <td>Appends this turn's raw messages under the session scope, then deletes everything past the 10
+              newest.</td>
+            <td>Runs even when extraction produced nothing, so the next call still has conversational
+              context.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <span class="note-tag">What is not here</span>
+      <p>The 2025 paper's second stage — scoring each candidate fact against existing memories and choosing
+        <code>ADD</code> / <code>UPDATE</code> / <code>DELETE</code> / <code>NOOP</code> — has no counterpart.
+        Contradictory memories coexist and reconciliation moves entirely to read time.</p>
+      <p>This is why the extraction prompt insists a memory encode its own transition —
+        <em>"switched from oat lattes to americanos"</em>, not <em>"drinks americanos"</em>. With the old row
+        still present and often ranking higher, that clause is the only thing telling a downstream model which
+        version is current.</p>
+    </div>
+  </section>
+
+  <!-- ============ 4. SEARCH ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2>SEARCH path — one recaller, two re-rankers</h2>
+    </div>
+
+    <p>The three signals are not three parallel ways in. <strong>Semantic search alone builds the candidate
+      set.</strong> BM25 and entity matching produce lookup tables keyed by memory id, and can only add score to
+      rows the vector search already returned.</p>
+
+    <ul class="key">
+      <li><span class="swatch sw-sem"></span> semantic — the only recaller</li>
+      <li><span class="swatch sw-bm"></span> BM25 — re-ranker</li>
+      <li><span class="swatch sw-ent"></span> entity — re-ranker</li>
+    </ul>
+
+    <figure>
+      <div class="canvas">
+        <svg viewBox="0 0 980 690" role="img" aria-label="The SEARCH path: the query fans out three ways, but only the semantic vector search produces the candidate pool. BM25 and entity lookups produce score tables keyed by memory id, which are joined onto the pool during fusion and cannot introduce new candidates. A threshold gate applies to the semantic score alone, before fusion.">
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <rect class="box-2" x="360" y="20" width="260" height="46" rx="3"></rect>
+          <text class="t-m b" x="378" y="49">search(query, filters={…})</text>
+
+          <path class="flow" d="M 490 66 L 490 86 L 150 86 L 150 108" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 490 66 L 490 108" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 490 66 L 490 86 L 830 86 L 830 108" marker-end="url(#a4)"></path>
+
+          <text class="t-hd" x="20" y="104" fill="var(--sig-bm)">RE-RANKER · BM25</text>
+          <text class="t-hd" x="360" y="104" fill="var(--sig-sem)">RECALLER · SEMANTIC</text>
+          <text class="t-hd" x="700" y="104" fill="var(--sig-ent)">RE-RANKER · ENTITY</text>
+
+          <rect class="box" x="20" y="110" width="260" height="44" rx="3" stroke="var(--sig-bm)" stroke-dasharray="5 3"></rect>
+          <text class="t-m" x="38" y="130">lemmatize(query)</text>
+          <text class="t-sub" x="38" y="147">spaCy lemmas</text>
+
+          <rect class="box" x="360" y="110" width="260" height="44" rx="3" stroke="var(--sig-sem)" stroke-width="1.8"></rect>
+          <text class="t-m" x="378" y="130">embed(query)</text>
+          <text class="t-sub" x="378" y="147">dense vector</text>
+
+          <rect class="box" x="700" y="110" width="260" height="44" rx="3" stroke="var(--sig-ent)" stroke-dasharray="5 3"></rect>
+          <text class="t-m" x="718" y="130">extractEntities(query)</text>
+          <text class="t-sub" x="718" y="147">NER · first 8, deduped</text>
+
+          <path class="flow" d="M 150 154 L 150 178" stroke="var(--sig-bm)" color="var(--sig-bm)" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 490 154 L 490 178" stroke="var(--sig-sem)" color="var(--sig-sem)" stroke-width="2" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 830 154 L 830 178" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#a4)"></path>
+
+          <rect class="box" x="20" y="180" width="260" height="62" rx="3" stroke="var(--sig-bm)" stroke-dasharray="5 3"></rect>
+          <text class="t b" x="38" y="202">keyword_search()</text>
+          <text class="t-sub" x="38" y="220">over Memory store,</text>
+          <text class="t-sub" x="38" y="236">field text_lemmatized</text>
+
+          <rect class="box" x="360" y="180" width="260" height="62" rx="3" stroke="var(--sig-sem)" stroke-width="1.8"></rect>
+          <text class="t b" x="378" y="202">vector_store.search()</text>
+          <text class="t-sub" x="378" y="220">over Memory store,</text>
+          <text class="t-sub" x="378" y="236">over-fetch max(4k, 60)</text>
+
+          <rect class="box" x="700" y="180" width="260" height="62" rx="3" stroke="var(--sig-ent)" stroke-dasharray="5 3"></rect>
+          <text class="t b" x="718" y="202">entity_store.search()</text>
+          <text class="t-sub" x="718" y="220">4 threads, top_k 500,</text>
+          <text class="t-sub" x="718" y="236">similarity ≥ 0.5</text>
+
+          <path class="flow" d="M 150 242 L 150 266" stroke="var(--sig-bm)" color="var(--sig-bm)" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 490 242 L 490 266" stroke="var(--sig-sem)" color="var(--sig-sem)" stroke-width="2" marker-end="url(#a4)"></path>
+          <path class="flow" d="M 830 242 L 830 266" stroke="var(--sig-ent)" color="var(--sig-ent)" marker-end="url(#a4)"></path>
+
+          <rect x="20" y="268" width="260" height="76" rx="3" fill="var(--bm-wash)" stroke="var(--sig-bm)" stroke-width="1.2" stroke-dasharray="5 3"></rect>
+          <text class="t b" x="38" y="290" fill="var(--sig-bm)">Score table</text>
+          <text class="t-m" x="38" y="311">{id: 0.0–1.0}</text>
+          <text class="t-sub" x="38" y="332">a lookup dict — not rows</text>
+
+          <rect x="360" y="268" width="260" height="76" rx="3" fill="var(--sem-wash)" stroke="var(--sig-sem)" stroke-width="2.6"></rect>
+          <text class="t b" x="378" y="290" fill="var(--sig-sem)">★ CANDIDATE POOL</text>
+          <text class="t-m" x="378" y="311">[{id, score, payload}]</text>
+          <text class="t-sub" x="378" y="332">the only source of rows</text>
+
+          <rect x="700" y="268" width="260" height="76" rx="3" fill="var(--ent-wash)" stroke="var(--sig-ent)" stroke-width="1.2" stroke-dasharray="5 3"></rect>
+          <text class="t b" x="718" y="290" fill="var(--sig-ent)">Boost table</text>
+          <text class="t-m" x="718" y="311">{id: 0.0–0.5}</text>
+          <text class="t-sub" x="718" y="332">a lookup dict — not rows</text>
+
+          <path class="flow" d="M 490 344 L 490 374" stroke="var(--sig-sem)" color="var(--sig-sem)" stroke-width="2" marker-end="url(#a4)"></path>
+          <rect x="360" y="376" width="260" height="50" rx="3" fill="var(--surface-2)" stroke="var(--gone)" stroke-width="1.8"></rect>
+          <text class="t b" x="378" y="398" fill="var(--gone)">Gate: sem &lt; θ → drop</text>
+          <text class="t-sub" x="378" y="416">semantic only, before fusion · θ = 0.1</text>
+
+          <path class="flow" d="M 150 344 L 150 462 L 356 462" stroke="var(--sig-bm)" color="var(--sig-bm)" stroke-dasharray="5 3" marker-end="url(#a4)"></path>
+          <text class="t-lbl" x="158" y="400" fill="var(--sig-bm)">join by id</text>
+          <text class="t-lbl" x="158" y="416" fill="var(--sig-bm)">adds no rows</text>
+
+          <path class="flow" d="M 830 344 L 830 462 L 624 462" stroke="var(--sig-ent)" color="var(--sig-ent)" stroke-dasharray="5 3" marker-end="url(#a4)"></path>
+          <text class="t-lbl" x="822" y="400" fill="var(--sig-ent)" text-anchor="end">join by id</text>
+          <text class="t-lbl" x="822" y="416" fill="var(--sig-ent)" text-anchor="end">adds no rows</text>
+
+          <path class="flow" d="M 490 426 L 490 486" stroke="var(--sig-sem)" color="var(--sig-sem)" stroke-width="2" marker-end="url(#a4)"></path>
+
+          <rect class="box-2" x="150" y="488" width="680" height="86" rx="3"></rect>
+          <text class="t b" x="170" y="512">Additive fusion — score_and_rank()</text>
+          <text class="t-m" x="170" y="538">score = min( (sem + B + β) / D , 1.0 )</text>
+          <text class="t-sub" x="170" y="560">D = 1.0 + 1.0 if any BM25 hit + 0.5 if any entity hit → computed once per query</text>
+
+          <path class="flow" d="M 490 574 L 490 604" marker-end="url(#a4)"></path>
+
+          <rect class="box" x="330" y="606" width="320" height="42" rx="3"></rect>
+          <text class="t-m b" x="350" y="632">sort desc → top-k (k = 20)</text>
+
+          <text class="t-lbl" x="20" y="676">solid = produces rows · dashed = produces scores only</text>
+        </svg>
+      </div>
+      <figcaption>The asymmetry is the point. A memory that BM25 matches perfectly but the vector search missed
+        is <b>never returned</b> — it is not in the pool, so there is nothing for the score table to join onto.
+        Over-fetching to <code>max(4·top_k, 60)</code> is the compensation for making one signal the sole
+        gatekeeper.</figcaption>
+    </figure>
+
+    <h3>Every block explained</h3>
+
+    <div class="tbl-scroll">
+      <table class="blocks">
+        <thead><tr><th>Block</th><th>What happens</th><th>Worth knowing</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="bname">S1 · Query prep</span><span class="bloc">main.py:1634–1635</span></td>
+            <td>Two spaCy passes over the raw query: <code>lemmatize_for_bm25()</code> for the keyword lane and
+              <code>extract_entities()</code> for the entity lane.</td>
+            <td>Both degrade cleanly — <code>get_nlp_*()</code> returns <code>None</code> when spaCy is missing,
+              so lemmatize returns the text unchanged and entity extraction returns <code>[]</code>.
+              <span class="watch">No exception, no warning.</span></td>
+          </tr>
+          <tr>
+            <td><span class="bname">S2·3 · Recall</span><span class="bloc">main.py:1638–1644</span></td>
+            <td>Query is embedded, then handed to the vector store with <code>top_k = max(4·limit, 60)</code>.
+              Similarity is computed inside the database against its ANN index.</td>
+            <td>Providers ignore the <code>query</code> string and use <code>vectors</code> only. Every backend
+              must return higher-is-better scores normalized toward <code>[0,1]</code>
+              (<code>vector_stores/base.py:16</code>), which is what makes the later addition valid.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">S4·5 · BM25</span><span class="bloc">main.py:1647–1659</span></td>
+            <td>Lemmatized query goes to <code>keyword_search()</code>. Raw BM25 values are squashed to
+              <code>[0,1]</code> by a logistic curve whose midpoint and steepness are chosen from the query's
+              term count.</td>
+            <td>Stores that do not implement it return <code>None</code> and the signal silently switches off.
+              16 of the 30 providers implement it.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">S6 · Entity boost</span><span class="bloc">main.py:1661–1664, 1733</span></td>
+            <td>Up to 8 deduped query entities are embedded and searched against the entity store on 4 threads.
+              Matches at similarity ≥ 0.5 push a boost onto every memory id they link to.</td>
+            <td>Boost is <code>sim × 0.5 × hubDecay</code>, and competing boosts take <code>max</code> rather
+              than summing. Hub decay <code>1/(1+0.001·(n−1)²)</code> stops an entity linked to thousands of
+              memories from flattening the ranking.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">S7 · Candidate set</span><span class="bloc">main.py:1666–1677</span></td>
+            <td>Iterates <em>the semantic results only</em>, dropping expired payloads, and builds the list that
+              scoring will run over.</td>
+            <td><span class="watch">This is where recall is decided.</span> The two score tables are never
+              iterated — they are only ever queried by <code>.get(id, 0.0)</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">S8 · Fusion</span><span class="bloc">utils/scoring.py</span></td>
+            <td>Threshold drops candidates on semantic score first, then the three components are summed and
+              divided by <code>D</code>.</td>
+            <td><span class="watch"><code>D</code> is computed once per query, not per candidate.</span> If any
+              single memory hit BM25, every candidate is divided by 2.0 — including those scoring 0 on it. A
+              row's score therefore depends on what else came back.</td>
+          </tr>
+          <tr>
+            <td><span class="bname">S9 · Format</span><span class="bloc">main.py:1689–1731</span></td>
+            <td>Builds <code>MemoryItem</code> dicts, lifts identity and role keys from payload to top level,
+              and folds anything else into <code>metadata</code>.</td>
+            <td>Pass <code>explain=True</code> to attach <code>score_details</code> with all three components,
+              <code>D</code>, and the threshold. It is the only way to see why something ranked where it
+              did.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <span class="note-tag">Scores are not portable</span>
+      <p>Because <code>D</code> depends on which signals fired for <em>this</em> query, the same memory scores
+        differently across queries. Compare scores within one result set; never across two.</p>
+    </div>
+  </section>
+
+  <!-- ============ 5. TAKEAWAY ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2>Reading the two paths together</h2>
+    </div>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>&nbsp;</th><th>ADD path</th><th>SEARCH path</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Public entry</strong></td><td><code>add()</code> · main.py:760</td><td><code>search()</code> · main.py:1379</td></tr>
+          <tr><td><strong>Real work</strong></td><td><code>_add_to_vector_store()</code> · 879</td><td><code>_search_vector_store()</code> · 1628</td></tr>
+          <tr><td><strong>Identity</strong></td><td>Top-level kwargs</td><td>Inside <code>filters</code></td></tr>
+          <tr><td><strong>LLM calls</strong></td><td>Exactly 1, constant</td><td>0</td></tr>
+          <tr><td><strong>Stores touched</strong></td><td>All three, read then write</td><td>Memory + Entity, read only</td></tr>
+          <tr><td><strong>Mutation</strong></td><td>Append only, never overwrite</td><td>None</td></tr>
+          <tr><td><strong>Resolves conflict</strong></td><td>No — keeps both versions</td><td>Only by ranking</td></tr>
+          <tr><td><strong>Without spaCy</strong></td><td>No entity links, no lemmas</td><td>Semantic only</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The single idea connecting them: because ADD refuses to reconcile anything, SEARCH has to. The
+      over-fetch, the two re-rankers, the gate placement and the adaptive divisor all exist to pick the right
+      memory out of a store that deliberately kept all of them — and even then, the final judgement is left to
+      whatever model consumes the results.</p>
+  </section>
+
+  <footer>
+    <p>Traced from <code>mem0/memory/main.py</code>, <code>mem0/configs/prompts.py</code>,
+      <code>mem0/utils/scoring.py</code> and <code>mem0/vector_stores/base.py</code> at commit
+      <code>a488e190</code>. P0–P8 and S1–S9 are labels for this document, not identifiers used in the source.
+      Behaviour described is the open-source SDK — the managed platform adds graph memory, summary generation,
+      temporal reasoning and decay on top of the same two paths.</p>
+  </footer>
+
+</div>
